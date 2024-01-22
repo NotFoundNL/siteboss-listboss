@@ -1,17 +1,17 @@
 # ListBoss UI for SiteBoss®
 
-This pckage adds a page to the SiteBoss CMS to show the results of mailings.
+This package adds a page to the SiteBoss CMS to show the results of mailings.
 
 ## Installation
 
 ### 1. Add the package
 
-Run composer:
+Run composer to add the package to your project:
 
 ```bash
 composer require notfoundnl/siteboss-listboss
 ```
-No artisan commands or migrations are required.
+No artisan commands or migrations are needed.
 
 ### 2. Update your .env file
 
@@ -32,7 +32,7 @@ To add the menu item add something like this, make sure to change the rights to 
     {
         "icon": "list",
         "title": "Jobs",
-        "path": "/table/jobs/",
+        "path": "/app/listboss/",
         "rights": "admin"
     }
 ]
