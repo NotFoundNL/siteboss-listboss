@@ -18,7 +18,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "notfoundnl/siteboss-framework": "^0.14"
+        "notfoundnl/siteboss-framework": "*"
     },
     "require-dev": {
         "laravel/pint": "^1.0",
