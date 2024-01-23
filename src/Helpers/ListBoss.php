@@ -19,13 +19,11 @@ class ListBoss
         $jobCall = $this->call(method: 'GET', endPoint: '/');
         if (isset($jobCall->jobs)) {
             foreach ($jobCall->jobs as $job) {
-                $jobObject = new Job($job->id);
-                $jobObject->setContent(subject: $job->subject, status: JobStatus::tryFromName($job->status));
+                $jobObject = new Job($job->id, subject: $job->subject, status: JobStatus::tryFromName($job->status));
 
                 $jobs[] = $jobObject;
             }
         }
-
         return $jobs;
     }
 }

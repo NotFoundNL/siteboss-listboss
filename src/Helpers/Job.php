@@ -8,12 +8,14 @@ class Job
 {
     use Api;
 
-    private ?string $subject = null;
+    private ?object $statusInfo = null;
 
-    private ?string $content = null;
-
-    public function __construct(private ?int $id = null)
-    {
+    public function __construct(
+        private ?int $id = null,
+        private ?string $subject = null,
+        private ?string $content = null,
+        private ?JobStatus $status = null
+    ) {
     }
 
     public function id(): ?int
@@ -26,11 +28,13 @@ class Job
         return $this->subject;
     }
 
-    public function setContent(string $subject, ?string $content, ?JobStatus $status): void
+    public function started(): bool
     {
-        $this->subject = $subject;
-        $this->content = $content;
-        $this->status = $status;
+        if ($this->status === null) {
+            $this->status = $this->status();
+        }
+
+        return $this->status->started();
     }
 
     public function save(): void
@@ -56,7 +60,18 @@ class Job
     {
         $status = $this->call(endPoint: $this->id.'/status', updateSelf: true);
 
+        $this->statusInfo = $status;
+
         return JobStatus::tryFromName($status->status);
+    }
+
+    public function statusInfo(): ?object
+    {
+        if ($this->statusInfo === null) {
+            $this->status();
+        }
+
+        return $this->statusInfo;
     }
 
     public function preview(string $email, array $params = []): bool

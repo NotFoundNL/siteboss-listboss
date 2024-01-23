@@ -14,7 +14,6 @@ use NotFound\ListBoss\Http\Controllers\ListBossController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
 Route::prefix(config('siteboss.api_prefix'))->group(function () {
     // Authenticated routes
     Route::group(['middleware' => ['auth:openid', 'api', EnsureEmailIsVerified::class]], function () {
@@ -22,9 +21,10 @@ Route::prefix(config('siteboss.api_prefix'))->group(function () {
         Route::group(
             [
                 'prefix' => '/{locale}/app/listboss',
-                'middleware' => 'set-forget-locale'
+                'middleware' => 'set-forget-locale',
             ], function () {
                 Route::get('', [ListBossController::class, 'index']);
+                Route::post('details', [ListBossController::class, 'status']);
             }
         );
     });
