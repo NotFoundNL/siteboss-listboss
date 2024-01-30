@@ -56,6 +56,11 @@ class Job
         return $this->call(method: 'POST', endPoint: $this->id.'/start', params: $parameters, updateSelf: true);
     }
 
+    public function result(): object
+    {
+        return  $this->call(endPoint: $this->id.'/result', updateSelf: true);
+    }
+
     public function status(): ?JobStatus
     {
         $status = $this->call(endPoint: $this->id.'/status', updateSelf: true);

@@ -4,11 +4,12 @@ namespace NotFound\ListBoss\Http\Controllers;
 
 use NotFound\Framework\Http\Controllers\Controller;
 use NotFound\Framework\Http\Requests\FormDataRequest;
-use NotFound\Layout\Elements\LayoutButton;
-use NotFound\Layout\Elements\LayoutForm;
 use NotFound\Layout\Elements\LayoutText;
+use NotFound\Layout\Elements\Table\LayoutTable;
+use NotFound\Layout\Elements\Table\LayoutTableColumn;
+use NotFound\Layout\Elements\Table\LayoutTableHeader;
+use NotFound\Layout\Elements\Table\LayoutTableRow;
 use NotFound\Layout\Helpers\LayoutWidgetHelper;
-use NotFound\Layout\Inputs\LayoutInputDropdown;
 use NotFound\ListBoss\Helpers\Job;
 use NotFound\ListBoss\Helpers\ListBoss;
 
@@ -16,38 +17,48 @@ class ListBossController extends Controller
 {
     public function index()
     {
-        if( !config('listboss.backend'))
-        {
+        if (! config('listboss.backend')) {
             abort(404);
         }
 
-        $widget = new LayoutWidgetHelper('Mailings', 'Resultaten van verzendingen inzien');
-        $widget->addBreadcrumb('Verzendingen');
-
-        $widget->widget->addForm($this->selectJob());
+        $widget = new LayoutWidgetHelper('E-mails', 'Verzendingen');
+        $widget->widget->addTable($this->selectJob());
 
         return $widget->response();
     }
 
-    public function status(FormDataRequest $request)
+    public function status(FormDataRequest $request, int $list)
     {
-        if( !config('listboss.backend'))
-        {
+        if (! config('listboss.backend')) {
             abort(404);
         }
 
-        $request->validate([
-            'list' => 'required|integer',
-        ]);
-        $job = new Job($request->get('list'));
+        $job = new Job($list);
 
-        $widget = new LayoutWidgetHelper('Verzending', $job->subject() ?? 'Verzending');
-        $widget->addBreadcrumb('Mailings', '/app/listboss/');
-        $widget->addBreadcrumb('Resultaten van verzendingen inzien', '/app/listboss/');
+        $widget = new LayoutWidgetHelper('E-mails', 'Status');
+        $widget->addBreadcrumb('Verzendingen', '/app/listboss/');
         $widget->widget->addText(new LayoutText('Status: '.$job->status()->getReadableName()));
 
         $widget->widget->addText($this->statusText($job->statusInfo()));
-        $widget->widget->addForm($this->selectJob());
+
+        $table = new LayoutTable(sort: false, delete: false, create: false);
+
+        $table->addHeader(new LayoutTableHeader('E-mailadres', 'email'));
+        $table->addHeader(new LayoutTableHeader('Ontvangen', 'received'));
+        $table->addHeader(new LayoutTableHeader('Geklikt', 'clicks'));
+        $table->addHeader(new LayoutTableHeader('Geopend', 'opens'));
+
+        $rowId = 1;
+        foreach ($job->result()->results as $result) {
+            $row = new LayoutTableRow($rowId++, '/app/listboss/'.$job->id().'/'.$result->id);
+            $row->addColumn(new LayoutTableColumn($result->email));
+            $row->addColumn(new LayoutTableColumn(\Sb::formatDate($result->delivered_at)));
+            $row->addColumn(new LayoutTableColumn($result->clicks));
+            $row->addColumn(new LayoutTableColumn($result->opens));
+            $table->addRow($row);
+        }
+
+        $widget->widget->addTable($table);
 
         return $widget->response();
     }
@@ -61,26 +72,19 @@ class ListBossController extends Controller
         return new LayoutText($text);
     }
 
-    private function selectJob(): LayoutForm
+    private function selectJob(): LayoutTable
     {
         $listBoss = new ListBoss();
         $jobs = $listBoss->list();
 
-        $form = new LayoutForm('app/listboss/details');
-
-        $dropDown = new LayoutInputDropdown('list', 'Kies een mailing');
-        $dropDown->setRequired();
-
+        $table = new LayoutTable(delete: false, create: false, edit: true, sort: false);
+        $table->addHeader(new LayoutTableHeader('Onderwerp', 'email'));
         foreach ($jobs as $job) {
-            if ($job->started()) {
-                $dropDown->addOption($job->id(), $job->subject());
-            }
+            $row = new LayoutTableRow($job->id(), '/app/listboss/'.$job->id().'/');
+            $row->addColumn(new LayoutTableColumn($job->subject()));
+            $table->addRow($row);
         }
 
-        $form->addInput($dropDown);
-
-        $form->addButton(new LayoutButton('Bekijk resultaten', 'submit', 'primary'));
-
-        return $form;
+        return $table;
     }
 }

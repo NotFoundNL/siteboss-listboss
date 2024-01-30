@@ -27,4 +27,9 @@ class ListBoss
 
         return $jobs;
     }
+
+    public function recipient(int $list, int $recipient): object
+    {
+        return $this->call(method: 'GET', endPoint: $list.'/recipient/'.$recipient);
+    }
 }
