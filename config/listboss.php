@@ -9,7 +9,7 @@ return [
     | Endpoint
     |--------------------------------------------------------------------------
     |
-    | Congifure the endpoint to use for the ListBoss API.
+    | Configure the endpoint to use for the ListBoss API.
     |
     */
 
@@ -37,5 +37,17 @@ return [
     */
 
     'ssl_verify' => env('LISTBOSS_SSL_VERIFY', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Enable the backend
+    |--------------------------------------------------------------------------
+    |
+    | This can be used to disable the backend routes. This is useful if you
+    | want to use the API only.
+    |
+    */
+
+    'backend' => env('LISTBOSS_BACKEND', true),
 
 ];

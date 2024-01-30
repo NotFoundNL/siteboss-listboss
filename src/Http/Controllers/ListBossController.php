@@ -16,8 +16,12 @@ class ListBossController extends Controller
 {
     public function index()
     {
+        if( !config('listboss.backend'))
+        {
+            abort(404);
+        }
 
-        $widget = new LayoutWidgetHelper('Mailings', 'Resultaten van nieuwsbrieven inzien');
+        $widget = new LayoutWidgetHelper('Mailings', 'Resultaten van verzendingen inzien');
         $widget->addBreadcrumb('Mailings');
 
         $widget->widget->addForm($this->selectJob());
@@ -27,6 +31,11 @@ class ListBossController extends Controller
 
     public function status(FormDataRequest $request)
     {
+        if( !config('listboss.backend'))
+        {
+            abort(404);
+        }
+
         $request->validate([
             'list' => 'required|integer',
         ]);
