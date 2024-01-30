@@ -22,7 +22,7 @@ class ListBossController extends Controller
         }
 
         $widget = new LayoutWidgetHelper('Mailings', 'Resultaten van verzendingen inzien');
-        $widget->addBreadcrumb('Mailings');
+        $widget->addBreadcrumb('Verzendingen');
 
         $widget->widget->addForm($this->selectJob());
 
@@ -41,9 +41,9 @@ class ListBossController extends Controller
         ]);
         $job = new Job($request->get('list'));
 
-        $widget = new LayoutWidgetHelper('Mailings', $job->subject() ?? 'Mailing');
+        $widget = new LayoutWidgetHelper('Verzending', $job->subject() ?? 'Verzending');
         $widget->addBreadcrumb('Mailings', '/app/listboss/');
-        $widget->addBreadcrumb('Resultaten van nieuwsbrieven inzien', '/app/listboss/');
+        $widget->addBreadcrumb('Resultaten van verzendingen inzien', '/app/listboss/');
         $widget->widget->addText(new LayoutText('Status: '.$job->status()->getReadableName()));
 
         $widget->widget->addText($this->statusText($job->statusInfo()));
