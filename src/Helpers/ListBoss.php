@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+//declare(strict_types=1);
 
 namespace NotFound\ListBoss\Helpers;
 
@@ -24,6 +24,7 @@ class ListBoss
                 $jobs[] = $jobObject;
             }
         }
+
         return $jobs;
     }
 }

@@ -16,13 +16,15 @@ trait Api
 
         $client = new Client();
         $endPoint = 'job/'.$endPoint;
-        $newJob = $client->request($method, env('LISTBOSS_ENDPOINT', 'https://listboss.nl/v2/').$endPoint, [
+        $newJob = $client->request($method, config('listboss.endpoint').$endPoint, [
             'json' => $params,
             'headers' => [
-                'Authorization' => 'Bearer '.env('LISTBOSS_API_KEY'),
+                'Authorization' => 'Bearer '.config('listboss.api_key'),
                 'Content-Type' => 'application/json',
             ],
             'allow_redirects' => false,
+
+            'verify' => config('listboss.ssl_verify'),
         ]);
         $result = json_decode($newJob->getBody()->getContents());
         if ($result === null) {
