@@ -4,6 +4,7 @@ namespace NotFound\ListBoss\Http\Controllers;
 
 use NotFound\Framework\Http\Controllers\Controller;
 use NotFound\Framework\Http\Requests\FormDataRequest;
+use NotFound\Layout\Elements\LayoutBar;
 use NotFound\Layout\Elements\LayoutText;
 use NotFound\Layout\Elements\Table\LayoutTable;
 use NotFound\Layout\Elements\Table\LayoutTableColumn;
@@ -35,11 +36,14 @@ class ListBossController extends Controller
 
         $job = new Job($list);
 
-        $widget = new LayoutWidgetHelper('E-mails', 'Status');
+        $widget = new LayoutWidgetHelper('E-mails', 'Status: '.$job->status()->getReadableName());
+        $widget->widget->noPadding();
         $widget->addBreadcrumb('Verzendingen', '/app/listboss/');
-        $widget->widget->addText(new LayoutText('Status: '.$job->status()->getReadableName()));
 
-        $widget->widget->addText($this->statusText($job->statusInfo()));
+        $bar = new LayoutBar();
+        //  $bar->addText(new LayoutText('Status: '.$job->status()->getReadableName()));
+        $bar->addText($this->statusText($job->statusInfo()));
+        $widget->widget->addBar($bar);
 
         $table = new LayoutTable(sort: false, delete: false, create: false);
 
@@ -53,12 +57,12 @@ class ListBossController extends Controller
 
         $validated = $request->validate([
             'sort' => 'string',
-            'asc' => 'string'
+            'asc' => 'string',
         ]);
 
         $jobResults = $job->result()->results;
 
-        if (!empty($validated['sort']) && !empty($validated['asc'])){
+        if (! empty($validated['sort']) && ! empty($validated['asc'])) {
             $jobResults = collect($jobResults)->sortBy($validated['sort'], 0, $validated['asc'] == 'true')->reverse()->toArray();
         }
 
@@ -80,9 +84,9 @@ class ListBossController extends Controller
     private function statusText(object $statusInfo): LayoutText
     {
         $text =
-            '<p>Aantal ontvangers: '.($statusInfo->recipients ?? '-')."</p>".
-            '<p>Aantal keer geopend in mailprogramma: '.($statusInfo->opens ?? '-')."</p>".
-            '<p>Aantal keer geklikt op links: '.($statusInfo->clicks ?? '-')."</p>".
+            '<p>Aantal ontvangers: '.($statusInfo->recipients ?? '-').'</p>'.
+            '<p>Aantal keer geopend in mailprogramma: '.($statusInfo->opens ?? '-').'</p>'.
+            '<p>Aantal keer geklikt op links: '.($statusInfo->clicks ?? '-').'</p>'.
             '<p>Voortgang: <strong>'.($statusInfo->progress ?? '0').'%</strong>'.
             '<p>Fouten: '.($statusInfo->errors ?? '0');
 
