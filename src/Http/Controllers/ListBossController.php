@@ -18,7 +18,7 @@ class ListBossController extends Controller
     public function index()
     {
         if (! config('listboss.backend')) {
-            abort(404);
+            abort(500, 'ListBoss settings are not set');
         }
 
         $widget = new LayoutWidgetHelper('E-mails', 'Verzendingen');
