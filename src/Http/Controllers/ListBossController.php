@@ -62,7 +62,7 @@ class ListBossController extends Controller
 
         $jobResults = $job->result(
             sort: $validated['sort'],
-            ascending: empty($validated['asc'] )
+            ascending: empty($validated['asc'])
         )->results;
 
         foreach ($jobResults as $result) {
