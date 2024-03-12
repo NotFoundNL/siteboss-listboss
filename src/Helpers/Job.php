@@ -56,9 +56,19 @@ class Job
         return $this->call(method: 'POST', endPoint: $this->id.'/start', params: $parameters, updateSelf: true);
     }
 
-    public function result(): object
+    public function result( string $sort = null,bool $ascending = false): object
     {
-        return  $this->call(endPoint: $this->id.'/result', updateSelf: true);
+        $params = [];
+        if( $sort !== null) {
+            $params['sort'] = $sort;
+            $params['direction'] = $ascending ;
+        }
+
+        return $this->call(
+            endPoint: $this->id.'/result',
+            params: $params, 
+            updateSelf: true
+        );
     }
 
     public function status(): ?JobStatus
