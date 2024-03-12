@@ -62,9 +62,11 @@ class ListBossController extends Controller
 
         $jobResults = $job->result()->results;
 
-        if (! empty($validated['sort']) && ! empty($validated['asc'])) {
-            $jobResults = collect($jobResults)->sortBy($validated['sort'], 0, $validated['asc'] == 'true')->reverse()->toArray();
-        }
+        // TODO: Sort on server, not sorting results that the database
+        //       can sort more efficiently.
+        // if (! empty($validated['sort']) && ! empty($validated['asc'])) {
+        //     $jobResults = collect($jobResults)->sortBy($validated['sort'], 0, $validated['asc'] == 'true')->reverse()->toArray();
+        // }
 
         foreach ($jobResults as $result) {
             $row = new LayoutTableRow($rowId++, '/app/listboss/'.$job->id().'/'.$result->id);
