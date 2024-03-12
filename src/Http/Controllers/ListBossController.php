@@ -23,6 +23,7 @@ class ListBossController extends Controller
         }
 
         $widget = new LayoutWidgetHelper('E-mails', 'Verzendingen');
+        $widget->widget->noPadding();
         $widget->widget->addTable($this->selectJob());
 
         return $widget->response();
@@ -61,7 +62,7 @@ class ListBossController extends Controller
         ]);
 
         $jobResults = $job->result(
-            sort: $validated['sort'],
+            sort: $validated['sort'] ?? null,
             ascending: empty($validated['asc'])
         )->results;
 
