@@ -50,20 +50,26 @@ class ListBossController extends Controller
 
         $table->addHeader(new LayoutTableHeader('E-mailadres', 'email'));
         $table->addHeader(new LayoutTableHeader('Ontvangen', 'received'));
-        $table->addHeader((new LayoutTableHeader('Status', 'status'))->sortable());
+        $table->addHeader((new LayoutTableHeader('Status', 'send_status'))->sortable());
         $table->addHeader((new LayoutTableHeader('Geopend', 'opens'))->sortable());
         $table->addHeader((new LayoutTableHeader('Geklikt', 'clicks'))->sortable());
 
         $rowId = 1;
 
         $validated = $request->validate([
-            'sort' => 'string',
-            'asc' => 'string',
+            'sort' => 'string|in:opens,clicks,send_status',
+            'asc' => 'string|in:true,false',
         ]);
+
+        if ($validated['asc'] ?? false === 'true'){
+            $direction = 'asc';
+        } else {
+            $direction = 'desc';
+        }
 
         $jobResults = $job->result(
             sort: $validated['sort'] ?? null,
-            ascending: empty($validated['asc'])
+            direction: $direction
         )->results;
 
         foreach ($jobResults as $result) {
@@ -85,8 +91,8 @@ class ListBossController extends Controller
     {
         $text =
             '<p>Aantal ontvangers: '.($statusInfo->recipients ?? '-').'</p>'.
-            '<p>Aantal keer geopend in mailprogramma: '.($statusInfo->opens ?? '-').'</p>'.
-            '<p>Aantal keer geklikt op links: '.($statusInfo->clicks ?? '-').'</p>'.
+            '<p>Ontvangers dat mail in mailprogramma heeft geopend: '.($statusInfo->opens ?? '-').'</p>'.
+            '<p>Ontvangers dat op links heeft geklikt: '.($statusInfo->clicks ?? '-').'</p>'.
             '<p>Voortgang: <strong>'.($statusInfo->progress ?? '0').'%</strong>'.
             '<p>Fouten: '.($statusInfo->errors ?? '0');
 
