@@ -61,7 +61,7 @@ class Job
         $params = [];
         if ($sort !== null) {
             $params['sort'] = $sort;
-            $params['asc'] = $ascending;
+            $params['direction'] = $ascending ? 'asc' : 'desc';
         }
 
         return $this->call(
