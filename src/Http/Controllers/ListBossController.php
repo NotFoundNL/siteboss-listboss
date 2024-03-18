@@ -61,10 +61,10 @@ class ListBossController extends Controller
             'asc' => 'string|in:true,false',
         ]);
 
-        if ($validated['asc'] ?? false === 'true'){
-            $direction = 'asc';
-        } else {
+        if (isset($validated['asc']) && $validated['asc'] === 'false'){
             $direction = 'desc';
+        } else {
+            $direction = 'asc';
         }
 
         $jobResults = $job->result(
