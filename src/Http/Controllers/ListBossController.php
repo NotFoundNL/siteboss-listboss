@@ -6,6 +6,7 @@ use NotFound\Framework\Http\Controllers\Controller;
 use NotFound\Framework\Http\Requests\FormDataRequest;
 use NotFound\Layout\Elements\LayoutBar;
 use NotFound\Layout\Elements\LayoutPager;
+use NotFound\Layout\Elements\LayoutSearchBox;
 use NotFound\Layout\Elements\LayoutText;
 use NotFound\Layout\Elements\Table\LayoutTable;
 use NotFound\Layout\Elements\Table\LayoutTableColumn;
@@ -44,11 +45,13 @@ class ListBossController extends Controller
             'sort' => 'string|in:opens,clicks,send_status',
             'asc' => 'string|in:true,false',
             'page' => 'integer|min:1',
+            'search' => 'string|nullable',
         ]);
 
         $jobResults = $job->result(
             sort: $validated['sort'] ?? 'opens',
             page: $validated['page'] ?? 1,
+            query: $validated['search'] ?? null,
             direction: (isset($validated['asc']) && $validated['asc'] === 'true') ? 'asc' : 'desc',
         );
 
@@ -64,8 +67,10 @@ class ListBossController extends Controller
         $widget->widget->addText(new LayoutText('Aantal ontvangers geklikt: '.$jobResults->clicks));
 
         $pager = new LayoutPager($jobResults->recipients, 100);
-
         $bar->addPager($pager);
+        $search = new LayoutSearchBox('Zoek e-mailadres');
+        $bar->addSearchBox($search);
+
         $widget->widget->addBar($bar);
 
         $table = new LayoutTable(sort: false, delete: false, create: false);
@@ -91,18 +96,6 @@ class ListBossController extends Controller
         $widget->widget->addTable($table);
 
         return $widget->response();
-    }
-
-    private function statusText(object $statusInfo): LayoutText
-    {
-        $text =
-            '<p>Aantal ontvangers: '.($statusInfo->recipients ?? '-').'</p>'.
-            '<p>Ontvangers dat mail in mailprogramma heeft geopend: '.($statusInfo->opens ?? '-').'</p>'.
-            '<p>Ontvangers dat op links heeft geklikt: '.($statusInfo->clicks ?? '-').'</p>'.
-            '<p>Voortgang: <strong>'.($statusInfo->progress ?? '0').'%</strong></p>'.
-            '<p>Fouten: '.($statusInfo->errors ?? '0').'</p>';
-
-        return new LayoutText($text);
     }
 
     private function selectJob(): LayoutTable

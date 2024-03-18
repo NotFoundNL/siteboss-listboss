@@ -56,13 +56,17 @@ class Job
         return $this->call(method: 'POST', endPoint: $this->id.'/start', params: $parameters, updateSelf: true);
     }
 
-    public function result(string $sort = null, int $page = 1, string $direction = 'desc'): object
+    public function result(string $sort = null, int $page = 1, string $direction = 'desc', string $query = null): object
     {
         $params = [];
         if ($sort !== null) {
             $params['sort'] = $sort;
             $params['direction'] = $direction;
             $params['page'] = $page;
+        }
+
+        if ($query !== null) {
+            $params['query'] = $query;
         }
 
         return $this->call(
