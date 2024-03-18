@@ -14,10 +14,11 @@ trait Api
             return null;
         }
 
+        $queryOrJson = $method === 'GET' ? 'query' : 'json';
         $client = new Client();
         $endPoint = 'job/'.$endPoint;
         $newJob = $client->request($method, config('listboss.endpoint').$endPoint, [
-            'json' => $params,
+            $queryOrJson => $params,
             'headers' => [
                 'Authorization' => 'Bearer '.config('listboss.api_key'),
                 'Content-Type' => 'application/json',

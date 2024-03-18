@@ -5,6 +5,7 @@ namespace NotFound\ListBoss\Http\Controllers;
 use NotFound\Framework\Http\Controllers\Controller;
 use NotFound\Framework\Http\Requests\FormDataRequest;
 use NotFound\Layout\Elements\LayoutBar;
+use NotFound\Layout\Elements\LayoutPager;
 use NotFound\Layout\Elements\LayoutText;
 use NotFound\Layout\Elements\Table\LayoutTable;
 use NotFound\Layout\Elements\Table\LayoutTableColumn;
@@ -35,15 +36,36 @@ class ListBossController extends Controller
             abort(404);
         }
 
+        // Create job
         $job = new Job($list);
 
-        $widget = new LayoutWidgetHelper('E-mails', 'Status: '.$job->status()->getReadableName());
+        // Get results
+        $validated = $request->validate([
+            'sort' => 'string|in:opens,clicks,send_status',
+            'asc' => 'string|in:true,false',
+            'page' => 'integer|min:1',
+        ]);
+
+        $jobResults = $job->result(
+            sort: $validated['sort'] ?? 'opens',
+            page: $validated['page'] ?? 1,
+            direction: (isset($validated['asc']) && $validated['asc'] === 'true') ? 'asc' : 'desc',
+        );
+
+        $widget = new LayoutWidgetHelper('E-mails', 'Status: '.$jobResults->message);
         $widget->widget->noPadding();
         $widget->addBreadcrumb('Verzendingen', '/app/listboss/');
 
         $bar = new LayoutBar();
-        //  $bar->addText(new LayoutText('Status: '.$job->status()->getReadableName()));
-        $bar->addText($this->statusText($job->statusInfo()));
+        $widget->widget->addText(new LayoutText('Aantal ontvangers: '.$jobResults->recipients));
+        $widget->widget->addText(new LayoutText('Aantal afgeleverd: '.$jobResults->delivered));
+        $widget->widget->addText(new LayoutText('Aantal fouten: '.$jobResults->failed));
+        $widget->widget->addText(new LayoutText('Aantal ontvangers geopend: '.$jobResults->opens));
+        $widget->widget->addText(new LayoutText('Aantal ontvangers geklikt: '.$jobResults->clicks));
+
+        $pager = new LayoutPager($jobResults->recipients, 100);
+
+        $bar->addPager($pager);
         $widget->widget->addBar($bar);
 
         $table = new LayoutTable(sort: false, delete: false, create: false);
@@ -56,27 +78,11 @@ class ListBossController extends Controller
 
         $rowId = 1;
 
-        $validated = $request->validate([
-            'sort' => 'string|in:opens,clicks,send_status',
-            'asc' => 'string|in:true,false',
-        ]);
-
-        if (isset($validated['asc']) && $validated['asc'] === 'false'){
-            $direction = 'desc';
-        } else {
-            $direction = 'asc';
-        }
-
-        $jobResults = $job->result(
-            sort: $validated['sort'] ?? null,
-            direction: $direction
-        )->results;
-
-        foreach ($jobResults as $result) {
+        foreach ($jobResults->results as $result) {
             $row = new LayoutTableRow($rowId++, '/app/listboss/'.$job->id().'/'.$result->id);
             $row->addColumn(new LayoutTableColumn($result->email));
             $row->addColumn(new LayoutTableColumn(\Sb::formatDate($result->delivered_at)));
-            $row->addColumn(new LayoutTableColumn($result->status ?? '-'));
+            $row->addColumn(new LayoutTableColumn($result->send_status ?? '-'));
             $row->addColumn(new LayoutTableColumn($result->opens));
             $row->addColumn(new LayoutTableColumn($result->clicks));
             $table->addRow($row);
@@ -93,8 +99,8 @@ class ListBossController extends Controller
             '<p>Aantal ontvangers: '.($statusInfo->recipients ?? '-').'</p>'.
             '<p>Ontvangers dat mail in mailprogramma heeft geopend: '.($statusInfo->opens ?? '-').'</p>'.
             '<p>Ontvangers dat op links heeft geklikt: '.($statusInfo->clicks ?? '-').'</p>'.
-            '<p>Voortgang: <strong>'.($statusInfo->progress ?? '0').'%</strong>'.
-            '<p>Fouten: '.($statusInfo->errors ?? '0');
+            '<p>Voortgang: <strong>'.($statusInfo->progress ?? '0').'%</strong></p>'.
+            '<p>Fouten: '.($statusInfo->errors ?? '0').'</p>';
 
         return new LayoutText($text);
     }
