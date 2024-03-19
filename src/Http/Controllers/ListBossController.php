@@ -4,6 +4,9 @@ namespace NotFound\ListBoss\Http\Controllers;
 
 use NotFound\Framework\Http\Controllers\Controller;
 use NotFound\Framework\Http\Requests\FormDataRequest;
+use NotFound\Layout\Elements\LayoutBar;
+use NotFound\Layout\Elements\LayoutPager;
+use NotFound\Layout\Elements\LayoutSearchBox;
 use NotFound\Layout\Elements\LayoutText;
 use NotFound\Layout\Elements\Table\LayoutTable;
 use NotFound\Layout\Elements\Table\LayoutTableColumn;
@@ -22,6 +25,7 @@ class ListBossController extends Controller
         }
 
         $widget = new LayoutWidgetHelper('E-mails', 'Verzendingen');
+        $widget->widget->noPadding();
         $widget->widget->addTable($this->selectJob());
 
         return $widget->response();
@@ -33,43 +37,65 @@ class ListBossController extends Controller
             abort(404);
         }
 
+        // Create job
         $job = new Job($list);
 
-        $widget = new LayoutWidgetHelper('E-mails', 'Status');
-        $widget->addBreadcrumb('Verzendingen', '/app/listboss/');
-        $widget->widget->addText(new LayoutText('Status: '.$job->status()->getReadableName()));
+        // Get results
+        $validated = $request->validate([
+            'sort' => 'string|in:opens,clicks,send_status',
+            'asc' => 'string|in:true,false',
+            'page' => 'integer|min:1',
+            'search' => 'string|nullable',
+        ]);
 
-        $widget->widget->addText($this->statusText($job->statusInfo()));
+        $jobResults = $job->result(
+            sort: $validated['sort'] ?? 'opens',
+            page: $validated['page'] ?? 1,
+            query: $validated['search'] ?? null,
+            direction: (isset($validated['asc']) && $validated['asc'] === 'true') ? 'asc' : 'desc',
+        );
+
+        $widget = new LayoutWidgetHelper('E-mails', 'Status: '.$jobResults->message);
+        $widget->widget->noPadding();
+        $widget->addBreadcrumb('Verzendingen', '/app/listboss/');
+
+        $bar = new LayoutBar();
+        $widget->widget->addText(new LayoutText('Aantal ontvangers: '.$jobResults->recipients));
+        $widget->widget->addText(new LayoutText('Aantal afgeleverd: '.$jobResults->delivered));
+        $widget->widget->addText(new LayoutText('Aantal fouten: '.$jobResults->failed));
+        $widget->widget->addText(new LayoutText('Aantal ontvangers geopend: '.$jobResults->opens));
+        $widget->widget->addText(new LayoutText('Aantal ontvangers geklikt: '.$jobResults->clicks));
+
+        $pager = new LayoutPager($jobResults->recipients, 100);
+        $bar->addPager($pager);
+        $search = new LayoutSearchBox('Zoek e-mailadres');
+        $bar->addSearchBox($search);
+
+        $widget->widget->addBar($bar);
 
         $table = new LayoutTable(sort: false, delete: false, create: false);
 
         $table->addHeader(new LayoutTableHeader('E-mailadres', 'email'));
         $table->addHeader(new LayoutTableHeader('Ontvangen', 'received'));
-        $table->addHeader(new LayoutTableHeader('Geklikt', 'clicks'));
-        $table->addHeader(new LayoutTableHeader('Geopend', 'opens'));
+        $table->addHeader((new LayoutTableHeader('Status', 'send_status'))->sortable());
+        $table->addHeader((new LayoutTableHeader('Geopend', 'opens'))->sortable());
+        $table->addHeader((new LayoutTableHeader('Geklikt', 'clicks'))->sortable());
 
         $rowId = 1;
-        foreach ($job->result()->results as $result) {
+
+        foreach ($jobResults->results as $result) {
             $row = new LayoutTableRow($rowId++, '/app/listboss/'.$job->id().'/'.$result->id);
             $row->addColumn(new LayoutTableColumn($result->email));
             $row->addColumn(new LayoutTableColumn(\Sb::formatDate($result->delivered_at)));
-            $row->addColumn(new LayoutTableColumn($result->clicks));
+            $row->addColumn(new LayoutTableColumn($result->send_status ?? '-'));
             $row->addColumn(new LayoutTableColumn($result->opens));
+            $row->addColumn(new LayoutTableColumn($result->clicks));
             $table->addRow($row);
         }
 
         $widget->widget->addTable($table);
 
         return $widget->response();
-    }
-
-    private function statusText(object $statusInfo): LayoutText
-    {
-        $text = '<p>Aantal ontvangers: '.($statusInfo->recipients ?? '-').
-        '<p>Voortgang: <strong>'.($statusInfo->progress ?? '0').'%</strong>'.
-        '<p>Fouten: '.($statusInfo->errors ?? '0');
-
-        return new LayoutText($text);
     }
 
     private function selectJob(): LayoutTable
