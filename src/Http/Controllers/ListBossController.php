@@ -5,14 +5,19 @@ namespace NotFound\ListBoss\Http\Controllers;
 use NotFound\Framework\Http\Controllers\Controller;
 use NotFound\Framework\Http\Requests\FormDataRequest;
 use NotFound\Layout\Elements\LayoutBar;
+use NotFound\Layout\Elements\LayoutBarButton;
+use NotFound\Layout\Elements\LayoutBreadcrumb;
+use NotFound\Layout\Elements\LayoutPage;
 use NotFound\Layout\Elements\LayoutPager;
 use NotFound\Layout\Elements\LayoutSearchBox;
 use NotFound\Layout\Elements\LayoutText;
+use NotFound\Layout\Elements\LayoutWidget;
 use NotFound\Layout\Elements\Table\LayoutTable;
 use NotFound\Layout\Elements\Table\LayoutTableColumn;
 use NotFound\Layout\Elements\Table\LayoutTableHeader;
 use NotFound\Layout\Elements\Table\LayoutTableRow;
 use NotFound\Layout\Helpers\LayoutWidgetHelper;
+use NotFound\Layout\LayoutResponse;
 use NotFound\ListBoss\Helpers\Job;
 use NotFound\ListBoss\Helpers\ListBoss;
 
@@ -21,10 +26,13 @@ class ListBossController extends Controller
     public function index()
     {
         if (! config('listboss.backend')) {
-            abort(500, 'ListBoss settings are not set');
+            $widget = new LayoutWidgetHelper('Probleem', 'Configuratie niet correct ingesteld');
+            $widget->widget->addText(new LayoutText('De configuratie voor ListBoss is niet correct ingesteld.'));
+
+            return $widget->response();
         }
 
-        $widget = new LayoutWidgetHelper('E-mails', 'Verzendingen');
+        $widget = new LayoutWidgetHelper('Resultaten van verzending', 'Verzendingen');
         $widget->widget->noPadding();
         $widget->widget->addTable($this->selectJob());
 
@@ -48,30 +56,53 @@ class ListBossController extends Controller
             'search' => 'string|nullable',
         ]);
 
+        $currentPage = $validated['page'] ?? 1;
+
         $jobResults = $job->result(
             sort: $validated['sort'] ?? 'opens',
-            page: $validated['page'] ?? 1,
+            page: $currentPage,
             query: $validated['search'] ?? null,
             direction: (isset($validated['asc']) && $validated['asc'] === 'true') ? 'asc' : 'desc',
         );
 
-        $widget = new LayoutWidgetHelper('E-mails', 'Status: '.$jobResults->message);
-        $widget->widget->noPadding();
-        $widget->addBreadcrumb('Verzendingen', '/app/listboss/');
+        $page = new LayoutPage('Resultaten van verzending');
+        $breadcrumb = new LayoutBreadcrumb();
+        $breadcrumb->addHome();
+        $breadcrumb->addItem('Verzendingen', '/app/listboss/');
+
+        $breadcrumb->addItem('Resultaat');
+        $page->addBreadcrumb($breadcrumb);
+        if ($currentPage == 1) {
+            $widget = new LayoutWidget('Samenvatting resultaten', 12);
+
+            $bar = new LayoutBar();
+            $bar->removePadding();
+
+            $bar->addBarButton((new LayoutBarButton('Uitleg'))->setLink('/app/listboss/docs'));
+
+            $widget->addBar($bar);
+
+            $widget->addText(new LayoutText('Status: '.$jobResults->message));
+            $widget->addText(new LayoutText('Aantal ontvangers: '.$jobResults->recipients));
+            $widget->addText(new LayoutText('Aantal afgeleverd: '.$jobResults->delivered));
+            $widget->addText(new LayoutText('Aantal fouten: '.$jobResults->failed));
+            $widget->addText(new LayoutText('Aantal ontvangers geopend: '.$jobResults->opens));
+            $widget->addText(new LayoutText('Aantal ontvangers geklikt: '.$jobResults->clicks));
+
+            $page->addWidget($widget);
+        }
+
+        $widget = new LayoutWidget('Technische details', 12);
+        $widget->noPadding();
 
         $bar = new LayoutBar();
-        $widget->widget->addText(new LayoutText('Aantal ontvangers: '.$jobResults->recipients));
-        $widget->widget->addText(new LayoutText('Aantal afgeleverd: '.$jobResults->delivered));
-        $widget->widget->addText(new LayoutText('Aantal fouten: '.$jobResults->failed));
-        $widget->widget->addText(new LayoutText('Aantal ontvangers geopend: '.$jobResults->opens));
-        $widget->widget->addText(new LayoutText('Aantal ontvangers geklikt: '.$jobResults->clicks));
 
         $pager = new LayoutPager($jobResults->recipients, 100);
         $bar->addPager($pager);
         $search = new LayoutSearchBox('Zoek e-mailadres');
         $bar->addSearchBox($search);
 
-        $widget->widget->addBar($bar);
+        $widget->addBar($bar);
 
         $table = new LayoutTable(sort: false, delete: false, create: false);
 
@@ -93,9 +124,12 @@ class ListBossController extends Controller
             $table->addRow($row);
         }
 
-        $widget->widget->addTable($table);
+        $widget->addTable($table);
+        $page->addWidget($widget);
+        $response = new LayoutResponse();
+        $response->addUIElement($page);
 
-        return $widget->response();
+        return $response->build();
     }
 
     private function selectJob(): LayoutTable
