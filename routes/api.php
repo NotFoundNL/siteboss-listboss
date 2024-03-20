@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use NotFound\Framework\Auth\Middleware\EnsureEmailIsVerified;
+use NotFound\ListBoss\Http\Controllers\DocumentationController;
 use NotFound\ListBoss\Http\Controllers\ListBossController;
 use NotFound\ListBoss\Http\Controllers\RecipientController;
 
@@ -23,8 +24,10 @@ Route::prefix(config('siteboss.api_prefix'))->group(function () {
             [
                 'prefix' => '/{locale}/app/listboss',
                 'middleware' => 'set-forget-locale',
-            ], function () {
+            ],
+            function () {
                 Route::get('', [ListBossController::class, 'index']);
+                Route::get('docs', [DocumentationController::class, 'index']);
                 Route::get('{list}', [ListBossController::class, 'status']);
                 Route::get('{list}/{recipient}', [RecipientController::class, 'show']);
             }
