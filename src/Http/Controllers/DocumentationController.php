@@ -13,7 +13,6 @@ class DocumentationController extends Controller
     {
         $widget = new LayoutWidgetHelper('Resultaten van verzending', 'Uitleg');
         $widget->addBreadcrumb('Verzendingen', '/app/listboss/');
-//        $widget->addBreadcrumb('Uitleg');
         $widget->widget->addTitle(new LayoutTitle('E-mails', 'Uitleg'));
         $widget->widget->addText(new LayoutText($this->doc()));
 
