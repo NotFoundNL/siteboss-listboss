@@ -85,14 +85,12 @@ class ListBossController extends Controller
             $widget->addBar($bar);
 
             $widget->addText(new LayoutText('Status: '.$jobResults->message));
-            if (isset($job->result()->results)) {
+            $widget->addText(new LayoutText('Aantal ontvangers: '.$jobResults->recipients));
+            $widget->addText(new LayoutText('Aantal afgeleverd: '.$jobResults->delivered));
+            $widget->addText(new LayoutText('Aantal fouten: '.$jobResults->failed));
+            $widget->addText(new LayoutText('Aantal ontvangers geopend: '.$jobResults->opens));
+            $widget->addText(new LayoutText('Aantal ontvangers geklikt: '.$jobResults->clicks));
 
-                $widget->addText(new LayoutText('Aantal ontvangers: '.$jobResults->recipients));
-                $widget->addText(new LayoutText('Aantal afgeleverd: '.$jobResults->delivered));
-                $widget->addText(new LayoutText('Aantal fouten: '.$jobResults->failed));
-                $widget->addText(new LayoutText('Aantal ontvangers geopend: '.$jobResults->opens));
-                $widget->addText(new LayoutText('Aantal ontvangers geklikt: '.$jobResults->clicks));
-            }
             $page->addWidget($widget);
         }
 
@@ -113,39 +111,32 @@ class ListBossController extends Controller
         } else {
             $rowId = 1;
 
-            $table = new LayoutTable(sort: false, delete: false, create: false);
+        $table = new LayoutTable(sort: false, delete: false, create: false);
 
-            $table->addHeader(new LayoutTableHeader('E-mailadres', 'email'));
-            $table->addHeader(new LayoutTableHeader('Ontvangen', 'received'));
-            $table->addHeader(new LayoutTableHeader('Geklikt', 'clicks'));
-            $table->addHeader(new LayoutTableHeader('Geopend', 'opens'));
-            foreach ($job->result()->results as $result) {
-                $row = new LayoutTableRow($rowId++, '/app/listboss/'.$job->id().'/'.$result->id);
-                $row->addColumn(new LayoutTableColumn($result->email));
-                $row->addColumn(new LayoutTableColumn(\Sb::formatDate($result->delivered_at)));
-                $row->addColumn(new LayoutTableColumn($result->send_status ?? '-'));
-                $row->addColumn(new LayoutTableColumn($result->opens));
-                $row->addColumn(new LayoutTableColumn($result->clicks));
-                $table->addRow($row);
-            }
+        $table->addHeader(new LayoutTableHeader('E-mailadres', 'email'));
+        $table->addHeader(new LayoutTableHeader('Ontvangen', 'received'));
+        $table->addHeader((new LayoutTableHeader('Status', 'send_status'))->sortable());
+        $table->addHeader((new LayoutTableHeader('Geopend', 'opens'))->sortable());
+        $table->addHeader((new LayoutTableHeader('Geklikt', 'clicks'))->sortable());
 
-            $widget->addTable($table);
+        $rowId = 1;
+
+        foreach ($jobResults->results as $result) {
+            $row = new LayoutTableRow($rowId++, '/app/listboss/'.$job->id().'/'.$result->id);
+            $row->addColumn(new LayoutTableColumn($result->email));
+            $row->addColumn(new LayoutTableColumn(\Sb::formatDate($result->delivered_at)));
+            $row->addColumn(new LayoutTableColumn($result->send_status ?? '-'));
+            $row->addColumn(new LayoutTableColumn($result->opens));
+            $row->addColumn(new LayoutTableColumn($result->clicks));
+            $table->addRow($row);
         }
 
+        $widget->addTable($table);
         $page->addWidget($widget);
-
+    }
         $response->addUIElement($page);
 
         return $response->build();
-    }
-
-    private function statusText(object $statusInfo): LayoutText
-    {
-        $text = '<p>Aantal ontvangers: '.($statusInfo->recipients ?? '-').
-            '<p>Voortgang: <strong>'.($statusInfo->progress ?? '0').'%</strong>'.
-            '<p>Fouten: '.($statusInfo->errors ?? '0');
-
-        return new LayoutText($text);
     }
 
     private function selectJob(): LayoutTable
