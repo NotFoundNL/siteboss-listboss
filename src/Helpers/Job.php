@@ -42,10 +42,10 @@ class Job
         $params = ['subject' => $this->subject, 'content' => $this->content];
         if ($this->id === null) {
             // Create new
-            $result = $this->call('POST', '', $params, updateSelf: true);
+            $result = $this->call('POST', 'job/', $params, updateSelf: true);
         } else {
             // Update
-            $result = $this->call('PUT', (string) $this->id, $params);
+            $result = $this->call('PUT', 'job/'.(string) $this->id, $params);
         }
     }
 
@@ -53,7 +53,7 @@ class Job
     {
         $parameters = ['recipients' => $list];
 
-        return $this->call(method: 'POST', endPoint: $this->id.'/start', params: $parameters, updateSelf: true);
+        return $this->call(method: 'POST', endPoint: 'job/'. $this->id.'/start', params: $parameters, updateSelf: true);
     }
 
     public function result(string $sort = null, int $page = 1, string $direction = 'desc', string $query = null): object
@@ -70,7 +70,7 @@ class Job
         }
 
         return $this->call(
-            endPoint: $this->id.'/result',
+            endPoint: 'job/'.$this->id.'/result',
             params: $params,
             updateSelf: true
         );
@@ -78,7 +78,7 @@ class Job
 
     public function status(): ?JobStatus
     {
-        $status = $this->call(endPoint: $this->id.'/status', updateSelf: true);
+        $status = $this->call(endPoint: 'job/'.$this->id.'/status', updateSelf: true);
 
         $this->statusInfo = $status;
 
@@ -101,7 +101,7 @@ class Job
         }
         $params = ['recipient' => $email, 'parameters' => (object) $params];
 
-        $this->call('POST', $this->id.'/preview', $params, updateSelf: true);
+        $this->call('POST', 'job/'.$this->id.'/preview', $params, updateSelf: true);
 
         return true;
     }

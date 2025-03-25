@@ -16,7 +16,7 @@ class ListBoss
     public function list(): array
     {
         $jobs = [];
-        $jobCall = $this->call(method: 'GET', endPoint: '/');
+        $jobCall = $this->call(method: 'GET', endPoint: 'job/');
         if (isset($jobCall->jobs)) {
             foreach ($jobCall->jobs as $job) {
                 $jobObject = new Job($job->id, subject: $job->subject, status: JobStatus::tryFromName($job->status));
@@ -30,6 +30,11 @@ class ListBoss
 
     public function recipient(int $list, int $recipient): object
     {
-        return $this->call(method: 'GET', endPoint: $list.'/recipient/'.$recipient);
+        return $this->call(method: 'GET', endPoint: 'job/'.$list.'/recipient/'.$recipient);
+    }
+
+    public function bounces(): object
+    {
+        return $this->call(method: 'GET', endPoint: 'bounces');
     }
 }

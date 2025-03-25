@@ -16,7 +16,7 @@ trait Api
 
         $queryOrJson = $method === 'GET' ? 'query' : 'json';
         $client = new Client();
-        $endPoint = 'job/'.$endPoint;
+        $endPoint = $endPoint;
         $newJob = $client->request($method, config('listboss.endpoint').$endPoint, [
             $queryOrJson => $params,
             'headers' => [
